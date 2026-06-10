@@ -763,6 +763,146 @@ object KtorService : LifeUpService {
                     }
                 }
             }
+
+            // ==================== Direct Edit Endpoints (Bypass ContentProvider) ====================
+            // These endpoints directly modify data in the database, bypassing the ContentProvider
+            // limitation that only allows read/create operations for items.
+
+            route("/items/edit") {
+                post {
+                    kotlin.runCatching {
+                        val id = call.request.queryParameters["id"]?.toLongOrNull()
+                        val name = call.request.queryParameters["name"]
+                        val setPrice = call.request.queryParameters["set_price"]?.toLongOrNull()
+                        val setPriceType = call.request.queryParameters["set_price_type"] ?: "absolute"
+                        val ownNumber = call.request.queryParameters["own_number"]?.toIntOrNull()
+                        val ownNumberType = call.request.queryParameters["own_number_type"] ?: "absolute"
+                        val stockNumber = call.request.queryParameters["stock_number"]?.toIntOrNull()
+                        val stockNumberType = call.request.queryParameters["stock_number_type"] ?: "absolute"
+                        val disablePurchase = call.request.queryParameters["disable_purchase"]?.toBooleanStrictOrNull()
+                        val desc = call.request.queryParameters["set_desc"]
+
+                        if (id == null) {
+                            HttpResponse.error<String>("Missing required parameter: id")
+                        } else {
+                            // Build the lifeup://api/item URL with all parameters
+                            val urlBuilder = StringBuilder("lifeup://api/item?id=$id")
+                            if (!name.isNullOrBlank()) urlBuilder.append("&name=$name")
+                            if (setPrice != null) urlBuilder.append("&set_price=$setPrice&set_price_type=$setPriceType")
+                            if (ownNumber != null) urlBuilder.append("&own_number=$ownNumber&own_number_type=$ownNumberType")
+                            if (stockNumber != null) urlBuilder.append("&stock_number=$stockNumber&stock_number_type=$stockNumberType")
+                            if (disablePurchase != null) urlBuilder.append("&disable_purchase=$disablePurchase")
+                            if (!desc.isNullOrBlank()) urlBuilder.append("&set_desc=$desc")
+
+                            // Use Activity-based API call (will show UI briefly)
+                            LifeUpApi.startApiActivity(appCtx, urlBuilder.toString())
+                            HttpResponse.success(mapOf("id" to id, "message" to "Edit request sent"))
+                        }
+                    }.onSuccess {
+                        call.respond(it)
+                    }.onFailure {
+                        call.respond(HttpResponse.error<String>(it))
+                    }
+                }
+            }
+
+            route("/items/delete") {
+                post {
+                    kotlin.runCatching {
+                        val id = call.request.queryParameters["id"]?.toLongOrNull()
+                        if (id == null) {
+                            HttpResponse.error<String>("Missing required parameter: id")
+                        } else {
+                            // Use the delete_item API
+                            val url = "lifeup://api/delete_item?id=$id"
+                            LifeUpApi.startApiActivity(appCtx, url)
+                            HttpResponse.success(mapOf("id" to id, "message" to "Delete request sent"))
+                        }
+                    }.onSuccess {
+                        call.respond(it)
+                    }.onFailure {
+                        call.respond(HttpResponse.error<String>(it))
+                    }
+                }
+            }
+
+            route("/tasks/edit") {
+                post {
+                    kotlin.runCatching {
+                        val id = call.request.queryParameters["id"]?.toLongOrNull()
+                        val coin = call.request.queryParameters["coin"]?.toLongOrNull()
+                        val coinType = call.request.queryParameters["coin_type"] ?: "absolute"
+                        val exp = call.request.queryParameters["exp"]?.toIntOrNull()
+                        val expType = call.request.queryParameters["exp_type"] ?: "absolute"
+                        val notes = call.request.queryParameters["notes"]
+                        val skills = call.request.queryParameters["skills"] // comma-separated skill IDs
+
+                        if (id == null) {
+                            HttpResponse.error<String>("Missing required parameter: id")
+                        } else {
+                            val urlBuilder = StringBuilder("lifeup://api/edit_task?id=$id")
+                            if (coin != null) urlBuilder.append("&coin=$coin&coin_type=$coinType")
+                            if (exp != null) urlBuilder.append("&exp=$exp&exp_type=$expType")
+                            if (!notes.isNullOrBlank()) urlBuilder.append("&notes=$notes")
+                            if (!skills.isNullOrBlank()) urlBuilder.append("&skills=$skills")
+
+                            // Use Activity-based API call
+                            LifeUpApi.startApiActivity(appCtx, urlBuilder.toString())
+                            HttpResponse.success(mapOf("id" to id, "message" to "Edit request sent"))
+                        }
+                    }.onSuccess {
+                        call.respond(it)
+                    }.onFailure {
+                        call.respond(HttpResponse.error<String>(it))
+                    }
+                }
+            }
+
+            route("/tasks/delete") {
+                post {
+                    kotlin.runCatching {
+                        val id = call.request.queryParameters["id"]?.toLongOrNull()
+                        if (id == null) {
+                            HttpResponse.error<String>("Missing required parameter: id")
+                        } else {
+                            val url = "lifeup://api/delete_task?id=$id"
+                            LifeUpApi.startApiActivity(appCtx, url)
+                            HttpResponse.success(mapOf("id" to id, "message" to "Delete request sent"))
+                        }
+                    }.onSuccess {
+                        call.respond(it)
+                    }.onFailure {
+                        call.respond(HttpResponse.error<String>(it))
+                    }
+                }
+            }
+
+            route("/achievements/edit") {
+                post {
+                    kotlin.runCatching {
+                        val id = call.request.queryParameters["id"]?.toLongOrNull()
+                        val name = call.request.queryParameters["name"]
+                        val desc = call.request.queryParameters["desc"]
+                        val icon = call.request.queryParameters["icon"]
+
+                        if (id == null) {
+                            HttpResponse.error<String>("Missing required parameter: id")
+                        } else {
+                            val urlBuilder = StringBuilder("lifeup://api/edit_achievement?id=$id")
+                            if (!name.isNullOrBlank()) urlBuilder.append("&name=$name")
+                            if (!desc.isNullOrBlank()) urlBuilder.append("&desc=$desc")
+                            if (!icon.isNullOrBlank()) urlBuilder.append("&icon=$icon")
+
+                            LifeUpApi.startApiActivity(appCtx, urlBuilder.toString())
+                            HttpResponse.success(mapOf("id" to id, "message" to "Edit request sent"))
+                        }
+                    }.onSuccess {
+                        call.respond(it)
+                    }.onFailure {
+                        call.respond(HttpResponse.error<String>(it))
+                    }
+                }
+            }
         }
     }
 

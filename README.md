@@ -70,6 +70,46 @@ or check our source code:
 
 <br/>
 
+### Direct Edit Endpoints (v1.2.x+)
+
+In addition to the standard ContentProvider-based APIs, LifeUp Cloud now provides **direct edit endpoints** that bypass the ContentProvider limitation. These endpoints allow you to **edit and delete items/tasks/achievements** that were previously read-only via HTTP.
+
+#### Available Direct Edit Endpoints
+
+| Endpoint | Method | Description | Example |
+|----------|--------|-------------|----------|
+| `/items/edit` | POST | Edit shop item price, stock, etc. | `POST /items/edit?id=203&set_price=300&set_price_type=absolute` |
+| `/items/delete` | POST | Delete a shop item | `POST /items/delete?id=236` |
+| `/tasks/edit` | POST | Edit task rewards, notes, etc. | `POST /tasks/edit?id=1&coin=50&coin_type=absolute` |
+| `/tasks/delete` | POST | Delete a task | `POST /tasks/delete?id=1` |
+| `/achievements/edit` | POST | Edit achievement details | `POST /achievements/edit?id=1&name=NewName` |
+
+#### Parameter Reference
+
+**`/items/edit` parameters:**
+- `id` (required) - Item ID
+- `set_price` - New price (use with `set_price_type`)
+- `set_price_type` - `absolute` (set directly) or `relative` (add/subtract)
+- `own_number` - Adjust owned quantity
+- `own_number_type` - `absolute` or `relative`
+- `stock_number` - Adjust stock quantity
+- `stock_number_type` - `absolute` or `relative`
+- `disable_purchase` - `true` or `false`
+- `set_desc` - New description
+
+**`/tasks/edit` parameters:**
+- `id` (required) - Task ID
+- `coin` - Reward coins (use with `coin_type`)
+- `coin_type` - `absolute` or `relative`
+- `exp` - Reward EXP (use with `exp_type`)
+- `exp_type` - `absolute` or `relative`
+- `notes` - Task notes
+- `skills` - Comma-separated skill IDs
+
+> **Note:** These endpoints use Activity-based API calls. The LifeUp app may briefly show UI when processing these requests.
+
+<br/>
+
 ### Contribution
 
 We're glad to review your pull requests. Please free feel to improve this project.
